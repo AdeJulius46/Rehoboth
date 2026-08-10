@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rehoboth-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rehoboth
+      POSTGRES_PASSWORD: rehoboth
+      POSTGRES_DB: rehoboth
+    ports:
+      - "5432:5432"
+    volumes:
+      - rehoboth-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  rehoboth-postgres-data:

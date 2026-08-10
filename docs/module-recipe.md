@@ -1,0 +1,48 @@
+# Module Recipe
+
+The literal checklist for building a new list/CRUD module (Agents, Staffs, Products, Warehouses, Sales, Projects, Invoices, Receipts, Payments, Expenses), following the pattern established by the Customers module (`src/features/customers`, `src/app/(app)/customers`).
+
+Deviations from this recipe require a written reason in the PR description (per `AGENTS.md` §9.2).
+
+## 1. Design first
+Pull the module's Figma node(s) from §2 of the architecture roadmap (list, add form, detail) via `get_screenshot`/`get_design_context` before writing code. Note every field, badge variant, and empty state — hidden Figma layers are real requirements.
+
+## 2. Schema
+Extend `prisma/schema.prisma` with any new model fields the Add form needs (check the form screenshot against the existing model — the roadmap's §6 model outline is a starting guess, not authoritative). Run `npx prisma migrate dev --name <module>_<change>` then `npx prisma generate` (the client can go stale after a schema change — if a build error references a field you just added, regenerate before debugging further).
+
+## 3. Feature folder
+Create `src/features/<module>/`:
+- `schema.ts` — one Zod object schema for the entity. If any field needs `z.coerce` (numbers from form inputs), export both `type X = z.output<typeof schema>` (parsed/submitted shape) and `type XFormInput = z.input<typeof schema>` (raw form shape) — `useForm<XFormInput, unknown, X>()` needs both, or RHF's resolver types won't line up.
+- `queries.ts` — `list<Entity>(params)` (search/filter/sort/paginate, server-side, whitelist sortable fields), `get<Entity>Stats()` (counts + aggregates for the stat cards), `get<Entity>ById(id)`.
+  - **Decimal fields must be serialized to plain numbers before rows are returned** (`Number(row.field)`), if the rows will be passed from a Server Component into any Client Component (e.g. the DataTable). Prisma `Decimal` instances aren't serializable across that boundary and fail silently at runtime, not at build time.
+- `actions.ts` — `"use server"` create/update/delete (+ archive if the module has a status toggle), each re-validating with the Zod schema, checking uniqueness where relevant, calling `revalidatePath` and `redirect` on success.
+- `components/columns.tsx` — TanStack `ColumnDef[]` for the list table.
+- `components/<entity>-stats.tsx`, `components/<entity>-filters.tsx`, `components/<entity>-form.tsx`, `components/<entity>-detail-actions.tsx` as needed.
+
+## 4. Pages
+- `(app)/<module>/page.tsx` — Server Component: reads `searchParams` (awaited, Next 15+ async), calls the queries, renders section heading + "Add X" button (bespoke JSX, not the shared `PageHeader` — see gotcha below) + stat cards + `Card` wrapping `DataTableToolbar` + `DataTable` + `DataTablePagination`.
+- `(app)/<module>/new/page.tsx` — thin client wrapper rendering `<EntityForm mode="create" onSubmit={createEntity} />`.
+- `(app)/<module>/[id]/edit/page.tsx` — Server Component: fetch by id (`notFound()` if missing), render `<EntityForm mode="edit" defaultValues={...} onSubmit={updateEntity.bind(null, id)} />`.
+- `(app)/<module>/[id]/page.tsx` — Server Component detail view: header card (avatar/name/status), tabs (Overview + module-specific), related-record sections. Use `EmptyState` for any tab whose backing module doesn't exist yet — don't fabricate data.
+
+## 5. Gotchas to check before assuming standard shadcn/Radix/Prisma behavior
+See `[[rehoboth-baseui-shadcn-gotchas]]` memory (or `src/components/ui/button.tsx`, `select.tsx`, `src/lib/db.ts` directly) for the full detail. Summary:
+- `Button`/`Dialog`/`Select`/etc. are Base UI, not Radix — use `render={<Link .../>}` + `nativeButton={false}` for link-styled buttons, not `asChild`. Base UI `Button` always exposes `role="button"`, even when rendering as a link — don't `getByRole("link", ...)` in tests for it.
+- `Select.Value` shows the raw `value` string, not the matching item's label, unless you pass `items={{value: label, ...}}` to the `Select` root.
+- The shared `PageHeader` component (`src/components/layout/page-header.tsx`) has its title rendering suppressed — don't rely on it for section headings; write the "Module Overview" / "Add New X" heading directly in the page/form instead. The persistent top-bar title (small "Customers" or breadcrumb "Customers / Add Customer") comes from `AppHeader` in `(app)/layout.tsx` automatically, derived from the route — no per-page wiring needed.
+- Prisma's `prisma-client` generator needs `src/generated/prisma` regenerated after every schema change (`npx prisma generate`), and the runtime client must be constructed with the `@prisma/adapter-pg` driver adapter (see `src/lib/db.ts`).
+- **Server-auto-generated fields (SKU, employee ID, warehouse code) must be `.optional()` in the Zod schema**, not `.min(1, ...)`. RHF's `zodResolver` validates client-side *before the server action ever runs* — if the field is marked required but the form leaves it blank expecting server-side auto-generation, the client rejects the submit and the user never even reaches the server. The server action still guarantees a real value before the Prisma `create` call (generate a code, then explicitly set it on the create `data` object *after* the `...parsed.data` spread, so TypeScript sees the non-optional guarantee too — see `createProduct`/`createWarehouse` in their `actions.ts`).
+- `prisma migrate dev` also refuses to run non-interactively whenever a schema change would emit a confirmation warning (e.g. a new `@unique` column) — see gotcha #5 in the memory file for the `db push --accept-data-loss` + hand-written migration + `migrate resolve --applied` workaround.
+- Query rows built with `{ ...prismaRow, computedField }` still carry along any *nested included relations* from `prismaRow` even if no column reads them — if those relations have their own `Decimal` fields (e.g. `stock: { include: { product: true } }` on a Warehouse row), destructure the relation out before spreading (`const { stock, ...rest } = warehouse`) or the DataTable client component will crash at runtime with the same Decimal-serialization error, for a field nobody actually rendered. This applies to any `getXById` too, not just list queries — a raw `db.model.findUnique(...)` return value is just as unsafe as a list row if it's ever read elsewhere; every `getXById` must serialize its own Decimal fields the same way its list function does.
+- **`count()+1`-based ID/number generators (SKU, employee ID, warehouse code, invoice number, project code) are unsafe** — deleting any row desyncs the count from the highest suffix actually in use, so a later `count()+1` can collide with a still-existing row's number and the `create()` throws a unique-constraint error. Symptom in the UI: the submit button gets stuck on "Saving..." forever, because the client-side `onSubmit` awaits a server action that rejects and nothing resets `isSubmitting`. Fix: generate the next number from the actual max existing suffix for the same prefix, not a row count — `db.model.findFirst({ where: { field: { startsWith: prefix } }, orderBy: { field: "desc" } })`, then `parseInt` the suffix and `+1` (see `generateSaleNumber`/`generateProjectCode`/`generateEmployeeId`/`generateSku`/`generateWarehouseCode`).
+- **Turbopack's dev-mode build cache (`.next/dev`) can serve stale compiled output across `next dev` process restarts.** Killing and relaunching the dev server process is not always enough to pick up a source change — if a fix doesn't seem to take effect (e.g. an old runtime error keeps recurring verbatim after the code was clearly changed), delete the `.next` directory before restarting to rule out stale cache before assuming the fix is wrong.
+
+## 6. Verify
+- `npm run lint`, `npm run build` (both must be clean before considering the module done).
+- Seed realistic volume (100s of rows) via `prisma/seed.ts` if the list needs pagination testing.
+- Manually drive the full CRUD flow once in a real browser (create → detail → edit → search/filter → delete) — type errors don't catch RSC-boundary serialization bugs (Decimal objects, function props) or Base UI role/label quirks; only running it does.
+- Add a Playwright spec under `tests/e2e/<module>.spec.ts` covering at least: create redirects to detail, edit persists, search filters the list, delete removes the row.
+- **If you just ran `rm -rf .next`, don't trust a mass Playwright failure at face value.** A full-suite run immediately after clearing the dev cache can fail 10+ otherwise-solid CRUD tests at once (including modules you didn't touch) purely from cold-compile timeouts stacking up over a multi-minute run — not a real regression. Rerun once with a warm cache before concluding anything broke.
+
+## 7. Linking two modules that reference each other (e.g. Sale → Invoice)
+When one module's schema has an optional FK into another (e.g. `Invoice.saleId`), don't assume the relation populates itself just because the field exists — every create action in this codebase is independent, so nothing sets it unless you explicitly wire a bridge. Prefer an optional, one-click "Generate X from Y" action (pre-fills the target's form-equivalent data server-side, sets the FK) over either (a) auto-creating the linked record on every save, or (b) requiring the user to duplicate data entry. Auto-creating on every save produces clutter for the many records on either side that legitimately have no counterpart (e.g. not every Sale needs a formal Invoice; not every Invoice comes from a Sale). Show the link both directions once it exists: the source record's button flips from "Generate X" to "View X", and the target record shows a small "Generated from `<source>`" back-reference.
