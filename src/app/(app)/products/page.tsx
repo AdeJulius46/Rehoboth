@@ -1,14 +1,12 @@
 import Link from "next/link";
-import { Package, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
-import { DataTable } from "@/components/data-table/data-table";
 import { DataTableToolbar } from "@/components/data-table/toolbar";
 import { DataTablePagination } from "@/components/data-table/pagination";
-import { productColumns } from "@/features/products/components/columns";
+import { ProductsDataTable } from "@/features/products/components/products-data-table";
 import { ProductStats } from "@/features/products/components/product-stats";
 import { ProductFilters } from "@/features/products/components/product-filters";
 import { getProductStats, listProducts } from "@/features/products/queries";
@@ -54,13 +52,7 @@ export default async function ProductsPage({
           <ProductFilters />
         </DataTableToolbar>
 
-        <DataTable
-          columns={productColumns(isAdmin)}
-          data={rows}
-          emptyState={
-            <EmptyState icon={Package} title="No products yet" description="Get started by adding your first product." />
-          }
-        />
+        <ProductsDataTable data={rows} isAdmin={isAdmin} />
 
         <DataTablePagination page={page} pageSize={pageSize} totalItems={totalItems} />
       </Card>
