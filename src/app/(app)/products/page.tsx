@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Package, Plus } from "lucide-react";
 
+import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -17,6 +18,9 @@ export default async function ProductsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const session = await auth();
+  const isAdmin = session?.user?.role === "ADMIN";
+
   const params = await searchParams;
   const q = typeof params.q === "string" ? params.q : undefined;
   const status = typeof params.status === "string" ? params.status : undefined;
@@ -35,10 +39,12 @@ export default async function ProductsPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-2xl font-semibold text-foreground">Products Overview</h2>
-        <Button render={<Link href="/products/new" />} nativeButton={false}>
-          <Plus />
-          Add Product
-        </Button>
+        {isAdmin && (
+          <Button render={<Link href="/products/new" />} nativeButton={false}>
+            <Plus />
+            Add Product
+          </Button>
+        )}
       </div>
 
       <ProductStats stats={stats} />
@@ -49,7 +55,7 @@ export default async function ProductsPage({
         </DataTableToolbar>
 
         <DataTable
-          columns={productColumns}
+          columns={productColumns(isAdmin)}
           data={rows}
           emptyState={
             <EmptyState icon={Package} title="No products yet" description="Get started by adding your first product." />

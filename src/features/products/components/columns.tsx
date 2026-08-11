@@ -22,7 +22,14 @@ const STOCK_STATUS_VARIANT = {
   out_of_stock: "danger",
 } as const;
 
-export const productColumns: ColumnDef<ProductListRow, unknown>[] = [
+export function productColumns(isAdmin: boolean): ColumnDef<ProductListRow, unknown>[] {
+  return [
+    ...baseProductColumns,
+    ...(isAdmin ? [actionsColumn] : []),
+  ];
+}
+
+const baseProductColumns: ColumnDef<ProductListRow, unknown>[] = [
   {
     accessorKey: "name",
     header: () => <ColumnHeader label="Product Name" sortKey="name" />,
@@ -63,16 +70,17 @@ export const productColumns: ColumnDef<ProductListRow, unknown>[] = [
       />
     ),
   },
-  {
-    id: "actions",
-    header: "",
-    cell: ({ row }) => (
-      <RowActions
-        viewHref={`/products/${row.original.id}`}
-        editHref={`/products/${row.original.id}/edit`}
-        entityLabel="Product"
-        onDelete={() => deleteProduct(row.original.id)}
-      />
-    ),
-  },
 ];
+
+const actionsColumn: ColumnDef<ProductListRow, unknown> = {
+  id: "actions",
+  header: "",
+  cell: ({ row }) => (
+    <RowActions
+      viewHref={`/products/${row.original.id}`}
+      editHref={`/products/${row.original.id}/edit`}
+      entityLabel="Product"
+      onDelete={() => deleteProduct(row.original.id)}
+    />
+  ),
+};

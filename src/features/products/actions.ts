@@ -3,11 +3,20 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { productSchema } from "@/features/products/schema";
 import { generateSku, getDefaultWarehouse } from "@/features/products/queries";
 
 export type ActionResult = { success: true } | { success: false; error: string };
+
+async function requireAdmin() {
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN") {
+    return { session: null, error: "Only an administrator can do this." } as const;
+  }
+  return { session, error: null } as const;
+}
 
 function parseProductForm(formData: FormData) {
   return productSchema.safeParse({
@@ -26,6 +35,9 @@ function parseProductForm(formData: FormData) {
 }
 
 export async function createProduct(formData: FormData): Promise<ActionResult> {
+  const { session, error } = await requireAdmin();
+  if (!session) return { success: false, error };
+
   const sku = (formData.get("sku") as string) || (await generateSku());
   formData.set("sku", sku);
   const parsed = parseProductForm(formData);
@@ -55,6 +67,9 @@ export async function createProduct(formData: FormData): Promise<ActionResult> {
 }
 
 export async function updateProduct(id: string, formData: FormData): Promise<ActionResult> {
+  const { session, error } = await requireAdmin();
+  if (!session) return { success: false, error };
+
   const parsed = parseProductForm(formData);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
@@ -74,12 +89,18 @@ export async function updateProduct(id: string, formData: FormData): Promise<Act
 }
 
 export async function deleteProduct(id: string): Promise<ActionResult> {
+  const { session, error } = await requireAdmin();
+  if (!session) return { success: false, error };
+
   await db.product.delete({ where: { id } });
   revalidatePath("/products");
   return { success: true };
 }
 
 export async function archiveProduct(id: string): Promise<ActionResult> {
+  const { session, error } = await requireAdmin();
+  if (!session) return { success: false, error };
+
   const product = await db.product.findUnique({ where: { id } });
   if (!product) {
     return { success: false, error: "Product not found" };

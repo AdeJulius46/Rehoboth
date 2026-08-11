@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { Activity, Package } from "lucide-react";
 
+import { auth } from "@/lib/auth";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -12,6 +13,9 @@ import { getProductById } from "@/features/products/queries";
 import { ProductDetailActions } from "@/features/products/components/product-detail-actions";
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  const isAdmin = session?.user?.role === "ADMIN";
+
   const { id } = await params;
   const product = await getProductById(id);
 
@@ -38,7 +42,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               <StatusBadge label={product.status === "ACTIVE" ? "Active" : "Inactive"} variant={product.status === "ACTIVE" ? "success" : "danger"} />
             </div>
           </div>
-          <ProductDetailActions id={product.id} />
+          {isAdmin && <ProductDetailActions id={product.id} />}
         </div>
 
         {product.description ? <p className="text-sm text-muted-foreground">{product.description}</p> : null}
