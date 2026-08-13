@@ -16,7 +16,7 @@ function parseCustomerForm(formData: FormData) {
     name: formData.get("name"),
     companyName: formData.get("companyName") || undefined,
     phone: formData.get("phone"),
-    email: formData.get("email"),
+    email: formData.get("email") || undefined,
     type: formData.get("type"),
     taxId: formData.get("taxId") || undefined,
     address: formData.get("address") || undefined,
@@ -32,9 +32,11 @@ export async function createCustomer(formData: FormData): Promise<ActionResult> 
     return { success: false, error: parsed.error.issues[0].message };
   }
 
-  const existing = await db.customer.findUnique({ where: { email: parsed.data.email } });
-  if (existing) {
-    return { success: false, error: "A customer with this email already exists." };
+  if (parsed.data.email) {
+    const existing = await db.customer.findUnique({ where: { email: parsed.data.email } });
+    if (existing) {
+      return { success: false, error: "A customer with this email already exists." };
+    }
   }
 
   const customer = await db.customer.create({ data: parsed.data });
@@ -53,9 +55,11 @@ export async function createCustomerQuick(formData: FormData): Promise<QuickCrea
     return { success: false, error: parsed.error.issues[0].message };
   }
 
-  const existing = await db.customer.findUnique({ where: { email: parsed.data.email } });
-  if (existing) {
-    return { success: false, error: "A customer with this email already exists." };
+  if (parsed.data.email) {
+    const existing = await db.customer.findUnique({ where: { email: parsed.data.email } });
+    if (existing) {
+      return { success: false, error: "A customer with this email already exists." };
+    }
   }
 
   const customer = await db.customer.create({ data: parsed.data });
@@ -69,12 +73,14 @@ export async function updateCustomer(id: string, formData: FormData): Promise<Ac
     return { success: false, error: parsed.error.issues[0].message };
   }
 
-  const existing = await db.customer.findUnique({ where: { email: parsed.data.email } });
-  if (existing && existing.id !== id) {
-    return { success: false, error: "A customer with this email already exists." };
+  if (parsed.data.email) {
+    const existing = await db.customer.findUnique({ where: { email: parsed.data.email } });
+    if (existing && existing.id !== id) {
+      return { success: false, error: "A customer with this email already exists." };
+    }
   }
 
-  await db.customer.update({ where: { id }, data: parsed.data });
+  await db.customer.update({ where: { id }, data: { ...parsed.data, email: parsed.data.email ?? null } });
   revalidatePath("/customers");
   revalidatePath(`/customers/${id}`);
   redirect(`/customers/${id}`);

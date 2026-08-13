@@ -82,10 +82,12 @@ export function SaleDetailDialog({
                 <Phone className="size-3.5" />
                 {sale.customerPhone}
               </p>
-              <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Mail className="size-3.5" />
-                {sale.customerEmail}
-              </p>
+              {sale.customerEmail ? (
+                <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Mail className="size-3.5" />
+                  {sale.customerEmail}
+                </p>
+              ) : null}
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Agent</p>

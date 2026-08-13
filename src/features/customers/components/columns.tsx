@@ -41,6 +41,7 @@ export const customerColumns: ColumnDef<CustomerListRow, unknown>[] = [
   {
     accessorKey: "email",
     header: () => <ColumnHeader label="Email" sortKey="email" />,
+    cell: ({ row }) => row.original.email || "—",
   },
   {
     accessorKey: "companyName",

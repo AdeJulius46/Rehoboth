@@ -137,7 +137,7 @@ export function CustomerForm({
             </Select>
           </div>
           <TextInput
-            label="Email Address"
+            label="Email Address (Optional)"
             type="email"
             placeholder="Enter Email Address"
             error={errors.email?.message}

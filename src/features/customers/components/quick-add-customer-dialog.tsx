@@ -100,12 +100,11 @@ export function QuickAddCustomerDialog({
             required
           />
           <TextInput
-            label="Email"
+            label="Email (Optional)"
             type="email"
             placeholder="Enter email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
           />
           <div className="grid gap-1.5">
             <Label>Customer Type</Label>

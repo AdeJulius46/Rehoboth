@@ -4,7 +4,7 @@ export const customerSchema = z.object({
   name: z.string().min(1, "Customer name is required"),
   companyName: z.string().optional(),
   phone: z.string().min(1, "Phone number is required"),
-  email: z.email("Enter a valid email address"),
+  email: z.email("Enter a valid email address").optional(),
   type: z.enum(["INDIVIDUAL", "BUSINESS"]),
   taxId: z.string().optional(),
   address: z.string().optional(),

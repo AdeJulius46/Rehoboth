@@ -23,7 +23,7 @@ export default async function EditCustomerPage({
         name: customer.name,
         companyName: customer.companyName ?? undefined,
         phone: customer.phone,
-        email: customer.email,
+        email: customer.email ?? undefined,
         type: customer.type,
         taxId: customer.taxId ?? undefined,
         address: customer.address ?? undefined,
