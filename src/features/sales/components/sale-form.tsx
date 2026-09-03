@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { QuantityInput } from "@/components/ui/quantity-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { CustomerPicker } from "@/features/customers/components/customer-picker";
@@ -253,15 +254,11 @@ export function SaleForm({
                       />
                     </TableCell>
                     <TableCell>
-                      <Input
-                        type="number"
-                        min={1}
+                      <QuantityInput
                         max={stock}
                         className="w-20"
                         value={item.quantity}
-                        onChange={(e) =>
-                          updateItem(index, { quantity: Math.max(1, Math.min(Number(e.target.value), stock)) })
-                        }
+                        onValueChange={(quantity) => updateItem(index, { quantity })}
                       />
                     </TableCell>
                     <TableCell>
