@@ -48,10 +48,14 @@ describe("buildReportCsv", () => {
   const lines = csv.split("\r\n");
 
   it("includes every section", () => {
-    expect(csv).toContain("Summary (all time)");
-    expect(csv).toContain("Daily Revenue (last 30 days)");
-    expect(csv).toContain("Sales by Category (all time)");
-    expect(csv).toContain("Top Selling Products (all time)");
+    expect(lines).toContain("Summary");
+    expect(lines).toContain("Daily Revenue");
+    expect(lines).toContain("Sales by Category");
+    expect(lines).toContain("Top Selling Products");
+  });
+
+  it("states the period the figures cover", () => {
+    expect(lines).toContain("Period,Last 30 days");
   });
 
   it("writes amounts as bare numbers so spreadsheets can sum them", () => {
@@ -71,6 +75,6 @@ describe("buildReportCsv", () => {
   });
 
   it("stamps when it was generated", () => {
-    expect(lines[1]).toBe("Generated,2026-09-03T10:00:00.000Z");
+    expect(lines).toContain("Generated,2026-09-03T10:00:00.000Z");
   });
 });

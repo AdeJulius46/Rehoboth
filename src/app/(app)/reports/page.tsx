@@ -25,10 +25,10 @@ export default async function ReportsPage({
   const days = typeof params.days === "string" ? Number(params.days) : 30;
 
   const [stats, trend, categoryBreakdown, topProducts] = await Promise.all([
-    getReportStats(),
+    getReportStats(days),
     getSalesTrend(days),
-    getSalesByCategory(),
-    getTopSellingProducts(5),
+    getSalesByCategory(days),
+    getTopSellingProducts(5, days),
   ]);
 
   const categoryData = categoryBreakdown.map((c) => ({ label: c.category, value: c.value }));

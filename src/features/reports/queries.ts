@@ -1,5 +1,21 @@
 import { db } from "@/lib/db";
 
+/**
+ * Midnight at the start of an N-day window, counting today as day one — so
+ * "Last 7 days" covers today plus the six before it.
+ */
+function startOfPeriod(days: number) {
+  const since = new Date();
+  since.setDate(since.getDate() - (days - 1));
+  since.setHours(0, 0, 0, 0);
+  return since;
+}
+
+/** Date filter for the report period, or undefined to leave a query all-time. */
+function periodFilter(days?: number) {
+  return days && days > 0 ? { gte: startOfPeriod(days) } : undefined;
+}
+
 export async function getDashboardStats() {
   const [revenueAgg, totalOrders, totalCustomers, totalAgents, totalStaff, totalProducts] = await Promise.all([
     db.sale.aggregate({ where: { status: "COMPLETED" }, _sum: { total: true } }),
@@ -20,11 +36,14 @@ export async function getDashboardStats() {
   };
 }
 
-export async function getReportStats() {
+export async function getReportStats(days?: number) {
+  const date = periodFilter(days);
+
   const [revenueAgg, totalOrders, expenseAgg] = await Promise.all([
-    db.sale.aggregate({ where: { status: "COMPLETED" }, _sum: { total: true } }),
-    db.sale.count(),
-    db.expense.aggregate({ _sum: { amount: true } }),
+    db.sale.aggregate({ where: { status: "COMPLETED", ...(date && { date }) }, _sum: { total: true } }),
+    // Every sale placed in the period, not just the completed ones.
+    db.sale.count({ where: { ...(date && { date }) } }),
+    db.expense.aggregate({ where: { ...(date && { date }) }, _sum: { amount: true } }),
   ]);
 
   const totalRevenue = Number(revenueAgg._sum.total ?? 0);
@@ -55,9 +74,7 @@ export async function getFinancialBreakdown() {
 }
 
 export async function getSalesTrend(days = 30) {
-  const since = new Date();
-  since.setDate(since.getDate() - (days - 1));
-  since.setHours(0, 0, 0, 0);
+  const since = startOfPeriod(days);
 
   const sales = await db.sale.findMany({
     where: { status: "COMPLETED", date: { gte: since } },
@@ -80,9 +97,11 @@ export async function getSalesTrend(days = 30) {
   return Array.from(byDay.entries()).map(([date, revenue]) => ({ date, revenue }));
 }
 
-export async function getSalesByCategory() {
+export async function getSalesByCategory(days?: number) {
+  const date = periodFilter(days);
+
   const items = await db.saleItem.findMany({
-    where: { sale: { status: "COMPLETED" } },
+    where: { sale: { status: "COMPLETED", ...(date && { date }) } },
     select: { lineTotal: true, product: { select: { category: true } } },
   });
 
@@ -97,10 +116,12 @@ export async function getSalesByCategory() {
     .sort((a, b) => b.value - a.value);
 }
 
-export async function getTopSellingProducts(limit = 5) {
+export async function getTopSellingProducts(limit = 5, days?: number) {
+  const date = periodFilter(days);
+
   const grouped = await db.saleItem.groupBy({
     by: ["productId"],
-    where: { sale: { status: "COMPLETED" } },
+    where: { sale: { status: "COMPLETED", ...(date && { date }) } },
     _sum: { quantity: true, lineTotal: true },
   });
 
