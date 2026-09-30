@@ -1,5 +1,6 @@
 "use client";
 
+import { BRAND } from "@/lib/brand";
 import * as React from "react";
 import Link from "next/link";
 
@@ -52,7 +53,7 @@ export function CreateAccountStep({
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-1 text-center">
         <h1 className="text-2xl font-semibold text-foreground">Create Your Account</h1>
-        <p className="text-sm text-muted-foreground">Get started with REHOBOTH</p>
+        <p className="text-sm text-muted-foreground">Get started with {BRAND.name}</p>
       </div>
 
       <TextInput

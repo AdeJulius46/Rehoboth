@@ -8,6 +8,7 @@ import { RevenueChart } from "@/features/reports/components/revenue-chart";
 import { DonutChart } from "@/features/reports/components/donut-chart";
 import { ReportPeriodFilter } from "@/features/reports/components/report-period-filter";
 import { ReportExportButton } from "@/features/reports/components/report-export";
+import { resolveReportRange, toDateKey } from "@/features/reports/period";
 import { formatNaira } from "@/lib/currency";
 import {
   getReportStats,
@@ -22,13 +23,19 @@ export default async function ReportsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const days = typeof params.days === "string" ? Number(params.days) : 30;
+  const range = resolveReportRange({
+    period: typeof params.period === "string" ? params.period : undefined,
+    from: typeof params.from === "string" ? params.from : undefined,
+    to: typeof params.to === "string" ? params.to : undefined,
+  });
+  const lastDay = new Date(range.end);
+  lastDay.setDate(lastDay.getDate() - 1);
 
   const [stats, trend, categoryBreakdown, topProducts] = await Promise.all([
-    getReportStats(days),
-    getSalesTrend(days),
-    getSalesByCategory(days),
-    getTopSellingProducts(5, days),
+    getReportStats(range),
+    getSalesTrend(range),
+    getSalesByCategory(range),
+    getTopSellingProducts(5, range),
   ]);
 
   const categoryData = categoryBreakdown.map((c) => ({ label: c.category, value: c.value }));
@@ -39,9 +46,9 @@ export default async function ReportsPage({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-2xl font-semibold text-foreground">Report Overview</h2>
         <div className="flex flex-wrap items-center gap-2">
-          <ReportPeriodFilter />
+          <ReportPeriodFilter period={range.key} from={toDateKey(range.start)} to={toDateKey(lastDay)} />
           <ReportExportButton
-            days={days}
+            periodLabel={range.label}
             stats={stats}
             trend={trend}
             categories={categoryBreakdown}

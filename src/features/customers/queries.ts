@@ -17,11 +17,8 @@ export type ListCustomersParams = {
   pageSize?: number;
 };
 
-export async function listCustomers(params: ListCustomersParams) {
-  const page = Math.max(params.page ?? 1, 1);
-  const pageSize = Math.min(Math.max(params.pageSize ?? 25, 1), 100);
-
-  const where = {
+function buildCustomerWhere(params: ListCustomersParams) {
+  return {
     ...(params.q
       ? {
           OR: [
@@ -35,6 +32,13 @@ export async function listCustomers(params: ListCustomersParams) {
     ...(params.status && params.status !== "all" ? { status: params.status as "ACTIVE" | "INACTIVE" } : {}),
     ...(params.type && params.type !== "all" ? { type: params.type as "INDIVIDUAL" | "BUSINESS" } : {}),
   };
+}
+
+export async function listCustomers(params: ListCustomersParams) {
+  const page = Math.max(params.page ?? 1, 1);
+  const pageSize = Math.min(Math.max(params.pageSize ?? 25, 1), 100);
+
+  const where = buildCustomerWhere(params);
 
   const orderBy = isSortableField(params.sortBy)
     ? { [params.sortBy]: params.sortDir === "desc" ? ("desc" as const) : ("asc" as const) }
@@ -90,4 +94,13 @@ export async function getCustomerById(id: string) {
     creditLimit: customer.creditLimit ? Number(customer.creditLimit) : null,
     openingBalance: Number(customer.openingBalance),
   };
+}
+
+/** Every customer matching the filters — no pagination — for export. */
+export async function listCustomersForExport(params: ListCustomersParams) {
+  return db.customer.findMany({
+    where: buildCustomerWhere(params),
+    orderBy: { name: "asc" },
+    select: { name: true, email: true, phone: true },
+  });
 }

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { BRAND } from "@/lib/brand";
 import { Logo } from "@/components/layout/logo";
 import { PrintableDocument } from "@/components/printable-document";
 import { formatNaira } from "@/lib/currency";
@@ -28,9 +29,9 @@ export default async function InvoiceDocumentPage({
           <Logo size={64} />
           <h1 className="text-3xl font-bold tracking-wide text-gray-900">INVOICE</h1>
           <div className="text-right text-sm text-gray-500">
-            <p>+234 703983687</p>
-            <p>rehobothnig@hotmail.com</p>
-            <p>Nigeria</p>
+            <p>{BRAND.phone}</p>
+            <p>{BRAND.email}</p>
+            <p>{BRAND.country}</p>
           </div>
         </div>
 
@@ -99,7 +100,7 @@ export default async function InvoiceDocumentPage({
           </div>
         </div>
 
-        <p className="text-sm italic text-gray-500">Thank you for choosing REHOBOTH!</p>
+        <p className="text-sm italic text-gray-500">Thank you for choosing {BRAND.name}!</p>
       </div>
     </PrintableDocument>
   );

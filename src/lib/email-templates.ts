@@ -1,5 +1,7 @@
+import { BRAND } from "@/lib/brand";
+
 export function otpEmailTemplate({ code, expiresInMinutes }: { code: string; expiresInMinutes: number }) {
-  const subject = "Your REHOBOTH verification code";
+  const subject = `Your ${BRAND.name} verification code`;
 
   const html = `<!doctype html>
 <html>
@@ -10,14 +12,14 @@ export function otpEmailTemplate({ code, expiresInMinutes }: { code: string; exp
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7;">
             <tr>
               <td style="background-color:#FF1400;padding:24px 32px;text-align:center;">
-                <span style="color:#ffffff;font-size:20px;font-weight:bold;letter-spacing:1px;">REHOBOTH</span>
+                <span style="color:#ffffff;font-size:20px;font-weight:bold;letter-spacing:1px;">${BRAND.name}</span>
               </td>
             </tr>
             <tr>
               <td style="padding:32px;">
                 <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#18181b;">Verify your email</h1>
                 <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#52525b;">
-                  Use the code below to finish creating your REHOBOTH account. This code expires in
+                  Use the code below to finish creating your ${BRAND.name} account. This code expires in
                   ${expiresInMinutes} minutes.
                 </p>
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
@@ -34,7 +36,7 @@ export function otpEmailTemplate({ code, expiresInMinutes }: { code: string; exp
             </tr>
             <tr>
               <td style="padding:20px 32px;background-color:#fafafa;border-top:1px solid #e4e4e7;text-align:center;">
-                <p style="margin:0;font-size:12px;color:#a1a1aa;">REHOBOTH Business Management System</p>
+                <p style="margin:0;font-size:12px;color:#a1a1aa;">${BRAND.name} Business Management System</p>
               </td>
             </tr>
           </table>
@@ -46,13 +48,13 @@ export function otpEmailTemplate({ code, expiresInMinutes }: { code: string; exp
 
   const text = `Verify your email
 
-Use the code below to finish creating your REHOBOTH account. This code expires in ${expiresInMinutes} minutes.
+Use the code below to finish creating your ${BRAND.name} account. This code expires in ${expiresInMinutes} minutes.
 
 ${code}
 
 Didn't request this code? You can safely ignore this email — your account is still secure.
 
-REHOBOTH Business Management System`;
+${BRAND.name} Business Management System`;
 
   return { subject, html, text };
 }
@@ -64,7 +66,7 @@ export function passwordResetEmailTemplate({
   resetLink: string;
   expiresInMinutes: number;
 }) {
-  const subject = "Reset your REHOBOTH password";
+  const subject = `Reset your ${BRAND.name} password`;
 
   const html = `<!doctype html>
 <html>
@@ -75,14 +77,14 @@ export function passwordResetEmailTemplate({
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7;">
             <tr>
               <td style="background-color:#FF1400;padding:24px 32px;text-align:center;">
-                <span style="color:#ffffff;font-size:20px;font-weight:bold;letter-spacing:1px;">REHOBOTH</span>
+                <span style="color:#ffffff;font-size:20px;font-weight:bold;letter-spacing:1px;">${BRAND.name}</span>
               </td>
             </tr>
             <tr>
               <td style="padding:32px;">
                 <h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#18181b;">Reset your password</h1>
                 <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#52525b;">
-                  We received a request to reset your REHOBOTH account password. Click the button below to choose a
+                  We received a request to reset your ${BRAND.name} account password. Click the button below to choose a
                   new one. This link expires in ${expiresInMinutes} minutes.
                 </p>
                 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
@@ -105,7 +107,7 @@ export function passwordResetEmailTemplate({
             </tr>
             <tr>
               <td style="padding:20px 32px;background-color:#fafafa;border-top:1px solid #e4e4e7;text-align:center;">
-                <p style="margin:0;font-size:12px;color:#a1a1aa;">REHOBOTH Business Management System</p>
+                <p style="margin:0;font-size:12px;color:#a1a1aa;">${BRAND.name} Business Management System</p>
               </td>
             </tr>
           </table>
@@ -117,13 +119,13 @@ export function passwordResetEmailTemplate({
 
   const text = `Reset your password
 
-We received a request to reset your REHOBOTH account password. Use the link below to choose a new one. This link expires in ${expiresInMinutes} minutes.
+We received a request to reset your ${BRAND.name} account password. Use the link below to choose a new one. This link expires in ${expiresInMinutes} minutes.
 
 ${resetLink}
 
 Didn't request this? You can safely ignore this email — your password will stay the same.
 
-REHOBOTH Business Management System`;
+${BRAND.name} Business Management System`;
 
   return { subject, html, text };
 }

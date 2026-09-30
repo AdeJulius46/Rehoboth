@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 
 import { db } from "@/lib/db";
 import { customerSchema } from "@/features/customers/schema";
+import { listCustomersForExport, type ListCustomersParams } from "@/features/customers/queries";
+import { toCsv } from "@/lib/csv";
 
 export type ActionResult = { success: true } | { success: false; error: string };
 export type QuickCreateResult =
@@ -105,4 +107,10 @@ export async function archiveCustomer(id: string): Promise<ActionResult> {
   revalidatePath("/customers");
   revalidatePath(`/customers/${id}`);
   return { success: true };
+}
+
+/** CSV of name, email and phone for every customer matching the current filters. */
+export async function exportCustomersCsv(filters: Pick<ListCustomersParams, "q" | "status" | "type">) {
+  const customers = await listCustomersForExport(filters);
+  return toCsv([["Name", "Email", "Phone"], ...customers.map((c) => [c.name, c.email, c.phone])]);
 }

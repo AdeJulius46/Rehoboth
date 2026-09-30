@@ -4,7 +4,7 @@ import { csvField, toCsv } from "@/lib/csv";
 import { buildReportCsv, type ReportCsvData } from "@/features/reports/csv";
 
 const data: ReportCsvData = {
-  days: 30,
+  periodLabel: "This month (September 2026)",
   stats: { totalRevenue: 12450000, totalOrders: 620, totalExpenses: 450000, netProfit: 12000000 },
   trend: [
     { date: "2026-08-05", revenue: 125000 },
@@ -55,7 +55,7 @@ describe("buildReportCsv", () => {
   });
 
   it("states the period the figures cover", () => {
-    expect(lines).toContain("Period,Last 30 days");
+    expect(lines).toContain("Period,This month (September 2026)");
   });
 
   it("writes amounts as bare numbers so spreadsheets can sum them", () => {

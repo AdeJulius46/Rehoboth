@@ -1,25 +1,17 @@
 import { db } from "@/lib/db";
+import { toDateKey, type ReportRange } from "@/features/reports/period";
 
-/**
- * Midnight at the start of an N-day window, counting today as day one — so
- * "Last 7 days" covers today plus the six before it.
- */
-function startOfPeriod(days: number) {
-  const since = new Date();
-  since.setDate(since.getDate() - (days - 1));
-  since.setHours(0, 0, 0, 0);
-  return since;
+/** Date filter for a report range. */
+function rangeFilter(range: ReportRange) {
+  return { gte: range.start, lt: range.end };
 }
 
-/** Date filter for the report period, or undefined to leave a query all-time. */
-function periodFilter(days?: number) {
-  return days && days > 0 ? { gte: startOfPeriod(days) } : undefined;
-}
+export async function getDashboardStats(range: ReportRange) {
+  const date = rangeFilter(range);
 
-export async function getDashboardStats() {
   const [revenueAgg, totalOrders, totalCustomers, totalAgents, totalStaff, totalProducts] = await Promise.all([
-    db.sale.aggregate({ where: { status: "COMPLETED" }, _sum: { total: true } }),
-    db.sale.count(),
+    db.sale.aggregate({ where: { status: "COMPLETED", date }, _sum: { total: true } }),
+    db.sale.count({ where: { date } }),
     db.customer.count(),
     db.agent.count(),
     db.staff.count(),
@@ -36,14 +28,14 @@ export async function getDashboardStats() {
   };
 }
 
-export async function getReportStats(days?: number) {
-  const date = periodFilter(days);
+export async function getReportStats(range: ReportRange) {
+  const date = rangeFilter(range);
 
   const [revenueAgg, totalOrders, expenseAgg] = await Promise.all([
-    db.sale.aggregate({ where: { status: "COMPLETED", ...(date && { date }) }, _sum: { total: true } }),
+    db.sale.aggregate({ where: { status: "COMPLETED", date }, _sum: { total: true } }),
     // Every sale placed in the period, not just the completed ones.
-    db.sale.count({ where: { ...(date && { date }) } }),
-    db.expense.aggregate({ where: { ...(date && { date }) }, _sum: { amount: true } }),
+    db.sale.count({ where: { date } }),
+    db.expense.aggregate({ where: { date }, _sum: { amount: true } }),
   ]);
 
   const totalRevenue = Number(revenueAgg._sum.total ?? 0);
@@ -57,10 +49,12 @@ export async function getReportStats(days?: number) {
   };
 }
 
-export async function getFinancialBreakdown() {
+export async function getFinancialBreakdown(range: ReportRange) {
+  const date = rangeFilter(range);
+
   const [revenueAgg, expenseAgg] = await Promise.all([
-    db.sale.aggregate({ where: { status: "COMPLETED" }, _sum: { total: true } }),
-    db.expense.aggregate({ _sum: { amount: true } }),
+    db.sale.aggregate({ where: { status: "COMPLETED", date }, _sum: { total: true } }),
+    db.expense.aggregate({ where: { date }, _sum: { amount: true } }),
   ]);
 
   const totalRevenue = Number(revenueAgg._sum.total ?? 0);
@@ -73,22 +67,18 @@ export async function getFinancialBreakdown() {
   };
 }
 
-export async function getSalesTrend(days = 30) {
-  const since = startOfPeriod(days);
-
+export async function getSalesTrend(range: ReportRange) {
   const sales = await db.sale.findMany({
-    where: { status: "COMPLETED", date: { gte: since } },
+    where: { status: "COMPLETED", date: rangeFilter(range) },
     select: { date: true, total: true },
   });
 
   const byDay = new Map<string, number>();
-  for (let i = 0; i < days; i++) {
-    const d = new Date(since);
-    d.setDate(d.getDate() + i);
-    byDay.set(d.toISOString().slice(0, 10), 0);
+  for (const d = new Date(range.start); d < range.end; d.setDate(d.getDate() + 1)) {
+    byDay.set(toDateKey(d), 0);
   }
   for (const sale of sales) {
-    const key = new Date(sale.date).toISOString().slice(0, 10);
+    const key = toDateKey(new Date(sale.date));
     if (byDay.has(key)) {
       byDay.set(key, (byDay.get(key) ?? 0) + Number(sale.total));
     }
@@ -97,11 +87,11 @@ export async function getSalesTrend(days = 30) {
   return Array.from(byDay.entries()).map(([date, revenue]) => ({ date, revenue }));
 }
 
-export async function getSalesByCategory(days?: number) {
-  const date = periodFilter(days);
+export async function getSalesByCategory(range: ReportRange) {
+  const date = rangeFilter(range);
 
   const items = await db.saleItem.findMany({
-    where: { sale: { status: "COMPLETED", ...(date && { date }) } },
+    where: { sale: { status: "COMPLETED", date } },
     select: { lineTotal: true, product: { select: { category: true } } },
   });
 
@@ -116,12 +106,12 @@ export async function getSalesByCategory(days?: number) {
     .sort((a, b) => b.value - a.value);
 }
 
-export async function getTopSellingProducts(limit = 5, days?: number) {
-  const date = periodFilter(days);
+export async function getTopSellingProducts(limit: number, range: ReportRange) {
+  const date = rangeFilter(range);
 
   const grouped = await db.saleItem.groupBy({
     by: ["productId"],
-    where: { sale: { status: "COMPLETED", ...(date && { date }) } },
+    where: { sale: { status: "COMPLETED", date } },
     _sum: { quantity: true, lineTotal: true },
   });
 
@@ -148,8 +138,9 @@ export async function getTopSellingProducts(limit = 5, days?: number) {
   }));
 }
 
-export async function getRecentSales(limit = 5) {
+export async function getRecentSales(limit: number, range: ReportRange) {
   const sales = await db.sale.findMany({
+    where: { date: rangeFilter(range) },
     orderBy: { createdAt: "desc" },
     take: limit,
     include: { customer: true },

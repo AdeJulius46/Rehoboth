@@ -9,6 +9,7 @@ import { DataTableToolbar } from "@/components/data-table/toolbar";
 import { DataTablePagination } from "@/components/data-table/pagination";
 import { customerColumns } from "@/features/customers/components/columns";
 import { CustomerStats } from "@/features/customers/components/customer-stats";
+import { CustomerExportButton } from "@/features/customers/components/customer-export";
 import { CustomerFilters } from "@/features/customers/components/customer-filters";
 import { getCustomerStats, listCustomers } from "@/features/customers/queries";
 
@@ -35,10 +36,13 @@ export default async function CustomersPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-2xl font-semibold text-foreground">Customers Overview</h2>
-        <Button render={<Link href="/customers/new" />} nativeButton={false}>
-          <Plus />
-          Add Customer
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <CustomerExportButton q={q} status={status} type={type} />
+          <Button render={<Link href="/customers/new" />} nativeButton={false}>
+            <Plus />
+            Add Customer
+          </Button>
+        </div>
       </div>
 
       <CustomerStats stats={stats} />

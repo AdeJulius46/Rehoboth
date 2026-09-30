@@ -19,6 +19,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RevenueChart } from "@/features/reports/components/revenue-chart";
 import { DonutChart } from "@/features/reports/components/donut-chart";
+import { ReportPeriodFilter } from "@/features/reports/components/report-period-filter";
+import { resolveReportRange, toDateKey } from "@/features/reports/period";
 import { formatNaira } from "@/lib/currency";
 import { SALE_STATUS_VARIANT } from "@/lib/constants";
 import {
@@ -55,13 +57,26 @@ function timeAgo(date: Date) {
   return `${days} day${days === 1 ? "" : "s"} ago`;
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const range = resolveReportRange({
+    period: typeof params.period === "string" ? params.period : undefined,
+    from: typeof params.from === "string" ? params.from : undefined,
+    to: typeof params.to === "string" ? params.to : undefined,
+  });
+  const lastDay = new Date(range.end);
+  lastDay.setDate(lastDay.getDate() - 1);
+
   const [stats, trend, financial, warehouseStock, recentSales, recentActivity, lowStock] = await Promise.all([
-    getDashboardStats(),
-    getSalesTrend(30),
-    getFinancialBreakdown(),
+    getDashboardStats(range),
+    getSalesTrend(range),
+    getFinancialBreakdown(range),
     getWarehouseStockSummary(),
-    getRecentSales(5),
+    getRecentSales(5, range),
     getRecentActivity(5),
     getLowStockAlerts(5),
   ]);
@@ -70,10 +85,13 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-2xl font-semibold text-foreground">Welcome Back</h2>
-        <Button render={<Link href="/sales/new" />} nativeButton={false}>
-          <ShoppingCart />
-          New Sale
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <ReportPeriodFilter period={range.key} from={toDateKey(range.start)} to={toDateKey(lastDay)} />
+          <Button render={<Link href="/sales/new" />} nativeButton={false}>
+            <ShoppingCart />
+            New Sale
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">

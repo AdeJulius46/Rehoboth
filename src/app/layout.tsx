@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Rethink_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
 const rethinkSans = Rethink_Sans({
@@ -9,8 +10,8 @@ const rethinkSans = Rethink_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "REHOBOTH — Business Management System",
-  description: "REHOBOTH is a business management system (mini-ERP) for product/sales-driven companies.",
+  title: `${BRAND.name} — Business Management System`,
+  description: `${BRAND.name} is a business management system (mini-ERP) for product/sales-driven companies.`,
 };
 
 export default function RootLayout({

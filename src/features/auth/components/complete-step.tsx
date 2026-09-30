@@ -1,5 +1,6 @@
 "use client";
 
+import { BRAND } from "@/lib/brand";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Check } from "lucide-react";
 
@@ -20,7 +21,7 @@ export function CompleteStep() {
         <p className="text-sm text-muted-foreground">
           Your account has been submitted for approval.
         </p>
-        <p className="text-sm text-muted-foreground">Welcome to REHOBOTH Company Management System</p>
+        <p className="text-sm text-muted-foreground">Welcome to {BRAND.name} Company Management System</p>
       </div>
       <Button onClick={() => router.push("/login?registered=1")}>
         Go to home

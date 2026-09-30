@@ -34,3 +34,14 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Running multiple businesses from this repo
+
+One codebase, one deployment per business. Each business gets its own Vercel project
+(pointing at this repo), its own Neon database and its own environment variables.
+
+- Branding (name, logo, contact details) comes from the `NEXT_PUBLIC_BRAND_*` variables — see `.env.example`.
+- `.env.owoblowtech.example` is the template for the Owoblowtech deployment.
+- Pushing to this repo rebuilds every Vercel project; each build runs `prisma migrate deploy` against its own database.
+- To run a business locally, copy its env template to `.env`.
+- To add another business: new Neon database, new Vercel project, new env template.

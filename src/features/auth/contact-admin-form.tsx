@@ -1,5 +1,6 @@
 "use client";
 
+import { BRAND } from "@/lib/brand";
 import * as React from "react";
 import Link from "next/link";
 import { Info, Mail, Phone } from "lucide-react";
@@ -95,13 +96,13 @@ export function ContactAdminForm() {
             </p>
           </div>
         </div>
-        <a href="tel:+2348001234567" className="flex items-center gap-2 text-primary">
+        <a href={`tel:${BRAND.supportPhone.replace(/\s/g, "")}`} className="flex items-center gap-2 text-primary">
           <Phone className="size-4" />
-          +234 800 123 4567
+          {BRAND.supportPhone}
         </a>
-        <a href="mailto:support@rehobothsoftware.com" className="flex items-center gap-2 text-primary">
+        <a href={`mailto:${BRAND.supportEmail}`} className="flex items-center gap-2 text-primary">
           <Mail className="size-4" />
-          support@rehobothsoftware.com
+          {BRAND.supportEmail}
         </a>
       </div>
     </form>

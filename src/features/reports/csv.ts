@@ -1,7 +1,8 @@
+import { BRAND } from "@/lib/brand";
 import { toCsv, type CsvValue } from "@/lib/csv";
 
 export type ReportCsvData = {
-  days: number;
+  periodLabel: string;
   stats: { totalRevenue: number; totalOrders: number; totalExpenses: number; netProfit: number };
   trend: { date: string; revenue: number }[];
   categories: { category: string; value: number }[];
@@ -18,8 +19,8 @@ export type ReportCsvData = {
 export function buildReportCsv(data: ReportCsvData, generatedAt = new Date()): string {
   const rows: CsvValue[][] = [];
 
-  rows.push(["Rehoboth Report"]);
-  rows.push(["Period", `Last ${data.days} days`]);
+  rows.push([`${BRAND.name} Report`]);
+  rows.push(["Period", data.periodLabel]);
   rows.push(["Generated", generatedAt.toISOString()]);
   rows.push([]);
 
