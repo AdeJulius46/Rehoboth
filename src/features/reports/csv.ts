@@ -9,7 +9,8 @@ export type ReportCsvData = {
     costOfGoods: number;
     grossProfit: number;
     totalExpenses: number;
-    netProfit: number;
+    /** Omitted for periods too short for net profit to be meaningful. */
+    netProfit?: number;
   };
   trend: { date: string; revenue: number }[];
   categories: { category: string; value: number }[];
@@ -38,7 +39,7 @@ export function buildReportCsv(data: ReportCsvData, generatedAt = new Date()): s
   rows.push(["Cost of Goods Sold (NGN)", data.stats.costOfGoods]);
   rows.push(["Gross Profit (NGN)", data.stats.grossProfit]);
   rows.push(["Total Expenses (NGN)", data.stats.totalExpenses]);
-  rows.push(["Net Profit (NGN)", data.stats.netProfit]);
+  if (data.stats.netProfit !== undefined) rows.push(["Net Profit (NGN)", data.stats.netProfit]);
   rows.push([]);
 
   rows.push(["Daily Revenue"]);

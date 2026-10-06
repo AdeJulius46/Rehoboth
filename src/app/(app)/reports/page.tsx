@@ -8,7 +8,7 @@ import { RevenueChart } from "@/features/reports/components/revenue-chart";
 import { DonutChart } from "@/features/reports/components/donut-chart";
 import { ReportPeriodFilter } from "@/features/reports/components/report-period-filter";
 import { ReportExportButton } from "@/features/reports/components/report-export";
-import { resolveReportRange, toDateKey } from "@/features/reports/period";
+import { resolveReportRange, showsNetProfit, toDateKey } from "@/features/reports/period";
 import { formatNaira } from "@/lib/currency";
 import {
   getReportStats,
@@ -28,6 +28,7 @@ export default async function ReportsPage({
     from: typeof params.from === "string" ? params.from : undefined,
     to: typeof params.to === "string" ? params.to : undefined,
   });
+  const showNetProfit = showsNetProfit(range);
   const lastDay = new Date(range.end);
   lastDay.setDate(lastDay.getDate() - 1);
 
@@ -49,7 +50,7 @@ export default async function ReportsPage({
           <ReportPeriodFilter period={range.key} from={toDateKey(range.start)} to={toDateKey(lastDay)} />
           <ReportExportButton
             periodLabel={range.label}
-            stats={stats}
+            stats={showNetProfit ? stats : { ...stats, netProfit: undefined }}
             trend={trend}
             categories={categoryBreakdown}
             topProducts={topProducts}
@@ -57,12 +58,12 @@ export default async function ReportsPage({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className={`grid gap-4 sm:grid-cols-2 ${showNetProfit ? "lg:grid-cols-3 xl:grid-cols-5" : "lg:grid-cols-4"}`}>
         <StatCard label="Total Revenue" value={formatNaira(stats.totalRevenue)} icon={Wallet} />
         <StatCard label="Total Orders" value={stats.totalOrders.toLocaleString()} icon={ShoppingCart} />
         <StatCard label="Gross Profit" value={formatNaira(stats.grossProfit)} icon={Coins} />
         <StatCard label="Total Expenses" value={formatNaira(stats.totalExpenses)} icon={Receipt} />
-        <StatCard label="Net Profit" value={formatNaira(stats.netProfit)} icon={TrendingUp} />
+        {showNetProfit ? <StatCard label="Net Profit" value={formatNaira(stats.netProfit)} icon={TrendingUp} /> : null}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

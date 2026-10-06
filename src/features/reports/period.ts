@@ -1,4 +1,4 @@
-export type ReportPeriodKey = "today" | "week" | "month" | "custom";
+export type ReportPeriodKey = "today" | "week" | "month" | "year" | "custom";
 
 export type ReportRange = {
   key: ReportPeriodKey;
@@ -11,6 +11,19 @@ export type ReportRange = {
 };
 
 const MAX_CUSTOM_DAYS = 366;
+/** A custom range at least this long counts as a month for showing net profit. */
+const MIN_NET_PROFIT_DAYS = 28;
+
+/**
+ * Net profit only means something over a month or more — running costs like
+ * salaries are steady while sales come in lumps, so a day or a week reads as a loss.
+ */
+export function showsNetProfit(range: ReportRange) {
+  if (range.key === "month" || range.key === "year") return true;
+  if (range.key !== "custom") return false;
+  const days = Math.round((range.end.getTime() - range.start.getTime()) / 86_400_000);
+  return days >= MIN_NET_PROFIT_DAYS;
+}
 
 /** YYYY-MM-DD in local time, matching what <input type="date"> produces. */
 export function toDateKey(date: Date) {
@@ -50,6 +63,12 @@ export function resolveReportRange(params: { period?: string; from?: string; to?
     const start = addDays(today, -((today.getDay() + 6) % 7));
     const end = addDays(start, 7);
     return { key: "week", start, end, label: `This week (${toDateKey(start)} to ${toDateKey(addDays(end, -1))})` };
+  }
+
+  if (params.period === "year") {
+    const start = new Date(today.getFullYear(), 0, 1);
+    const end = new Date(today.getFullYear() + 1, 0, 1);
+    return { key: "year", start, end, label: `This year (${today.getFullYear()})` };
   }
 
   if (params.period === "custom") {

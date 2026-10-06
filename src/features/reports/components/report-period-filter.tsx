@@ -9,6 +9,7 @@ const PERIODS: { key: ReportPeriodKey; label: string }[] = [
   { key: "today", label: "Today" },
   { key: "week", label: "This week" },
   { key: "month", label: "This month" },
+  { key: "year", label: "This year" },
   { key: "custom", label: "Custom" },
 ];
 

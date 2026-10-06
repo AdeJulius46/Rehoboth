@@ -22,7 +22,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { RevenueChart } from "@/features/reports/components/revenue-chart";
 import { DonutChart } from "@/features/reports/components/donut-chart";
 import { ReportPeriodFilter } from "@/features/reports/components/report-period-filter";
-import { resolveReportRange, toDateKey } from "@/features/reports/period";
+import { resolveReportRange, showsNetProfit, toDateKey } from "@/features/reports/period";
 import { formatNaira } from "@/lib/currency";
 import { SALE_STATUS_VARIANT } from "@/lib/constants";
 import {
@@ -70,6 +70,7 @@ export default async function DashboardPage({
     from: typeof params.from === "string" ? params.from : undefined,
     to: typeof params.to === "string" ? params.to : undefined,
   });
+  const showNetProfit = showsNetProfit(range);
   const lastDay = new Date(range.end);
   lastDay.setDate(lastDay.getDate() - 1);
 
@@ -100,7 +101,7 @@ export default async function DashboardPage({
         <StatCard label="Total Revenue" value={formatNaira(stats.totalRevenue)} icon={Wallet} />
         <StatCard label="Total Orders" value={stats.totalOrders.toLocaleString()} icon={ShoppingCart} />
         <StatCard label="Gross Profit" value={formatNaira(financial.grossProfit)} icon={Coins} />
-        <StatCard label="Net Profit" value={formatNaira(financial.netProfit)} icon={TrendingUp} />
+        {showNetProfit ? <StatCard label="Net Profit" value={formatNaira(financial.netProfit)} icon={TrendingUp} /> : null}
         <StatCard label="Total Customers" value={stats.totalCustomers.toLocaleString()} icon={Users} />
         <StatCard label="Total Agents" value={stats.totalAgents.toLocaleString()} icon={User} />
         <StatCard label="Total Staff" value={stats.totalStaff.toLocaleString()} icon={UsersRound} />
@@ -116,8 +117,8 @@ export default async function DashboardPage({
         <Card className="gap-4 p-5">
           <h3 className="font-semibold text-foreground">Financial Overview</h3>
           <DonutChart
-            centerLabel="Net Profit"
-            centerValue={financial.netProfit}
+            centerLabel={showNetProfit ? "Net Profit" : "Gross Profit"}
+            centerValue={showNetProfit ? financial.netProfit : financial.grossProfit}
             data={[
               { label: "Total Revenue", value: financial.totalRevenue },
               { label: "Cost of Goods", value: financial.costOfGoods },
