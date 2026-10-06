@@ -6,6 +6,20 @@ function rangeFilter(range: ReportRange) {
   return { gte: range.start, lt: range.end };
 }
 
+/**
+ * Cost of the goods sold in the range: each completed sale line's quantity at the
+ * product's current cost price. Sale lines don't snapshot cost, so a later cost
+ * change shifts past figures.
+ */
+async function getCostOfGoodsSold(range: ReportRange) {
+  const items = await db.saleItem.findMany({
+    where: { sale: { status: "COMPLETED", date: rangeFilter(range) } },
+    select: { quantity: true, product: { select: { costPrice: true } } },
+  });
+
+  return items.reduce((sum, item) => sum + item.quantity * Number(item.product.costPrice), 0);
+}
+
 export async function getDashboardStats(range: ReportRange) {
   const date = rangeFilter(range);
 
@@ -31,39 +45,47 @@ export async function getDashboardStats(range: ReportRange) {
 export async function getReportStats(range: ReportRange) {
   const date = rangeFilter(range);
 
-  const [revenueAgg, totalOrders, expenseAgg] = await Promise.all([
+  const [revenueAgg, totalOrders, expenseAgg, costOfGoods] = await Promise.all([
     db.sale.aggregate({ where: { status: "COMPLETED", date }, _sum: { total: true } }),
     // Every sale placed in the period, not just the completed ones.
     db.sale.count({ where: { date } }),
     db.expense.aggregate({ where: { date }, _sum: { amount: true } }),
+    getCostOfGoodsSold(range),
   ]);
 
   const totalRevenue = Number(revenueAgg._sum.total ?? 0);
   const totalExpenses = Number(expenseAgg._sum.amount ?? 0);
+  const grossProfit = totalRevenue - costOfGoods;
 
   return {
     totalRevenue,
     totalOrders,
+    costOfGoods,
+    grossProfit,
     totalExpenses,
-    netProfit: totalRevenue - totalExpenses,
+    netProfit: grossProfit - totalExpenses,
   };
 }
 
 export async function getFinancialBreakdown(range: ReportRange) {
   const date = rangeFilter(range);
 
-  const [revenueAgg, expenseAgg] = await Promise.all([
+  const [revenueAgg, expenseAgg, costOfGoods] = await Promise.all([
     db.sale.aggregate({ where: { status: "COMPLETED", date }, _sum: { total: true } }),
     db.expense.aggregate({ where: { date }, _sum: { amount: true } }),
+    getCostOfGoodsSold(range),
   ]);
 
   const totalRevenue = Number(revenueAgg._sum.total ?? 0);
   const totalExpenses = Number(expenseAgg._sum.amount ?? 0);
+  const grossProfit = totalRevenue - costOfGoods;
 
   return {
     totalRevenue,
+    costOfGoods,
+    grossProfit,
     totalExpenses,
-    totalProfit: totalRevenue - totalExpenses,
+    netProfit: grossProfit - totalExpenses,
   };
 }
 

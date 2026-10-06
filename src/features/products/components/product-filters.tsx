@@ -10,7 +10,7 @@ import {
 import { useTableParams } from "@/hooks/use-table-params";
 import { PRODUCT_CATEGORIES } from "@/features/products/constants";
 
-const STATUS_ITEMS = { all: "All Status", ACTIVE: "Active", INACTIVE: "Inactive" };
+const STATUS_ITEMS = { all: "All Status", ACTIVE: "Active", INACTIVE: "Inactive", LOW_STOCK: "Low Stock", OUT_OF_STOCK: "Out of Stock" };
 
 export function ProductFilters() {
   const { params, setParams } = useTableParams();

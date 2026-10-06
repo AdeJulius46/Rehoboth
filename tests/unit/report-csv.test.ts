@@ -5,7 +5,14 @@ import { buildReportCsv, type ReportCsvData } from "@/features/reports/csv";
 
 const data: ReportCsvData = {
   periodLabel: "This month (September 2026)",
-  stats: { totalRevenue: 12450000, totalOrders: 620, totalExpenses: 450000, netProfit: 12000000 },
+  stats: {
+    totalRevenue: 12450000,
+    totalOrders: 620,
+    costOfGoods: 9000000,
+    grossProfit: 3450000,
+    totalExpenses: 450000,
+    netProfit: 3000000,
+  },
   trend: [
     { date: "2026-08-05", revenue: 125000 },
     { date: "2026-08-06", revenue: 0 },
@@ -60,6 +67,9 @@ describe("buildReportCsv", () => {
 
   it("writes amounts as bare numbers so spreadsheets can sum them", () => {
     expect(lines).toContain("Total Revenue (NGN),12450000");
+    expect(lines).toContain("Cost of Goods Sold (NGN),9000000");
+    expect(lines).toContain("Gross Profit (NGN),3450000");
+    expect(lines).toContain("Net Profit (NGN),3000000");
     // No naira sign and no thousands separators anywhere in the data.
     expect(csv).not.toContain("₦");
     expect(csv).not.toContain("12,450,000");

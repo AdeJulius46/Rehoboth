@@ -1,4 +1,4 @@
-import { TrendingUp, ShoppingCart, Receipt, Wallet, Package } from "lucide-react";
+import { TrendingUp, ShoppingCart, Receipt, Wallet, Package, Coins } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
@@ -57,9 +57,10 @@ export default async function ReportsPage({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard label="Total Revenue" value={formatNaira(stats.totalRevenue)} icon={Wallet} />
         <StatCard label="Total Orders" value={stats.totalOrders.toLocaleString()} icon={ShoppingCart} />
+        <StatCard label="Gross Profit" value={formatNaira(stats.grossProfit)} icon={Coins} />
         <StatCard label="Total Expenses" value={formatNaira(stats.totalExpenses)} icon={Receipt} />
         <StatCard label="Net Profit" value={formatNaira(stats.netProfit)} icon={TrendingUp} />
       </div>

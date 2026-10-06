@@ -37,7 +37,9 @@ export async function listProducts(params: ListProductsParams) {
           ],
         }
       : {}),
-    ...(params.status && params.status !== "all" ? { status: params.status as "ACTIVE" | "INACTIVE" } : {}),
+    ...(params.status === "ACTIVE" || params.status === "INACTIVE"
+      ? { status: params.status as "ACTIVE" | "INACTIVE" }
+      : {}),
     ...(params.category && params.category !== "all" ? { category: params.category } : {}),
   };
 
@@ -45,12 +47,22 @@ export async function listProducts(params: ListProductsParams) {
     ? { [params.sortBy]: params.sortDir === "desc" ? ("desc" as const) : ("asc" as const) }
     : { createdAt: "desc" as const };
 
-  const [products, totalItems] = await Promise.all([
-    db.product.findMany({ where, orderBy, skip: (page - 1) * pageSize, take: pageSize, include: { stock: true } }),
-    db.product.count({ where }),
+  // Low/out of stock depend on stock summed across warehouses, which a database
+  // filter can't express, so those views load every match and filter/paginate here.
+  const stockFilter = params.status === "LOW_STOCK" ? "low_stock" : params.status === "OUT_OF_STOCK" ? "out_of_stock" : null;
+  const byStock = stockFilter !== null;
+
+  const [products, dbTotal] = await Promise.all([
+    db.product.findMany({
+      where,
+      orderBy,
+      include: { stock: true },
+      ...(byStock ? {} : { skip: (page - 1) * pageSize, take: pageSize }),
+    }),
+    byStock ? Promise.resolve(0) : db.product.count({ where }),
   ]);
 
-  const rows = products.map((product) => {
+  const allRows = products.map((product) => {
     const { stock, ...rest } = product;
     const quantity = stock.reduce((sum, s) => sum + s.quantity, 0);
     return {
@@ -61,6 +73,10 @@ export async function listProducts(params: ListProductsParams) {
       stockStatus: stockStatus(quantity, product.reorderLevel),
     };
   });
+
+  const matching = byStock ? allRows.filter((row) => row.stockStatus === stockFilter) : allRows;
+  const rows = byStock ? matching.slice((page - 1) * pageSize, page * pageSize) : matching;
+  const totalItems = byStock ? matching.length : dbTotal;
 
   return { rows, totalItems, page, pageSize };
 }

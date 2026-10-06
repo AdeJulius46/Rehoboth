@@ -3,7 +3,14 @@ import { toCsv, type CsvValue } from "@/lib/csv";
 
 export type ReportCsvData = {
   periodLabel: string;
-  stats: { totalRevenue: number; totalOrders: number; totalExpenses: number; netProfit: number };
+  stats: {
+    totalRevenue: number;
+    totalOrders: number;
+    costOfGoods: number;
+    grossProfit: number;
+    totalExpenses: number;
+    netProfit: number;
+  };
   trend: { date: string; revenue: number }[];
   categories: { category: string; value: number }[];
   topProducts: { name: string; unitsSold: number; totalSales: number; percentage: number }[];
@@ -28,6 +35,8 @@ export function buildReportCsv(data: ReportCsvData, generatedAt = new Date()): s
   rows.push(["Metric", "Value"]);
   rows.push(["Total Revenue (NGN)", data.stats.totalRevenue]);
   rows.push(["Total Orders", data.stats.totalOrders]);
+  rows.push(["Cost of Goods Sold (NGN)", data.stats.costOfGoods]);
+  rows.push(["Gross Profit (NGN)", data.stats.grossProfit]);
   rows.push(["Total Expenses (NGN)", data.stats.totalExpenses]);
   rows.push(["Net Profit (NGN)", data.stats.netProfit]);
   rows.push([]);

@@ -9,6 +9,8 @@ import {
   Warehouse,
   CreditCard,
   UserPlus,
+  Coins,
+  TrendingUp,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -94,9 +96,11 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total Revenue" value={formatNaira(stats.totalRevenue)} icon={Wallet} />
         <StatCard label="Total Orders" value={stats.totalOrders.toLocaleString()} icon={ShoppingCart} />
+        <StatCard label="Gross Profit" value={formatNaira(financial.grossProfit)} icon={Coins} />
+        <StatCard label="Net Profit" value={formatNaira(financial.netProfit)} icon={TrendingUp} />
         <StatCard label="Total Customers" value={stats.totalCustomers.toLocaleString()} icon={Users} />
         <StatCard label="Total Agents" value={stats.totalAgents.toLocaleString()} icon={User} />
         <StatCard label="Total Staff" value={stats.totalStaff.toLocaleString()} icon={UsersRound} />
@@ -112,10 +116,11 @@ export default async function DashboardPage({
         <Card className="gap-4 p-5">
           <h3 className="font-semibold text-foreground">Financial Overview</h3>
           <DonutChart
-            centerLabel="Total Profit"
-            centerValue={financial.totalProfit}
+            centerLabel="Net Profit"
+            centerValue={financial.netProfit}
             data={[
               { label: "Total Revenue", value: financial.totalRevenue },
+              { label: "Cost of Goods", value: financial.costOfGoods },
               { label: "Total Expenses", value: financial.totalExpenses },
             ]}
           />
