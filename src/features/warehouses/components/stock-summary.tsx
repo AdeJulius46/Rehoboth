@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Package, Plus, Pencil } from "lucide-react";
+import { Package, Plus, Pencil, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -201,6 +201,16 @@ export function StockSummary({
 }) {
   const [adjusting, setAdjusting] = React.useState<StockRow | null>(null);
   const [addOpen, setAddOpen] = React.useState(false);
+  const [query, setQuery] = React.useState("");
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredStock = normalizedQuery
+    ? stock.filter(
+        (row) =>
+          row.product.name.toLowerCase().includes(normalizedQuery) ||
+          row.product.sku.toLowerCase().includes(normalizedQuery),
+      )
+    : stock;
 
   return (
     <Card className="p-0">
@@ -211,8 +221,21 @@ export function StockSummary({
           Add Product
         </Button>
       </div>
+      {stock.length > 0 ? (
+        <div className="px-5 pt-4">
+          <div className="relative max-w-sm">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by product name or SKU..."
+              className="pl-8"
+            />
+          </div>
+        </div>
+      ) : null}
       <div className="p-5 pt-0">
-        {stock.length > 0 ? (
+        {filteredStock.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -225,7 +248,7 @@ export function StockSummary({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {stock.map((row) => {
+              {filteredStock.map((row) => {
                 const status = stockStatus(row.quantity, row.product.reorderLevel);
                 return (
                   <TableRow key={row.id}>
@@ -249,6 +272,12 @@ export function StockSummary({
               })}
             </TableBody>
           </Table>
+        ) : normalizedQuery ? (
+          <EmptyState
+            icon={Search}
+            title="No matching products"
+            description={`Nothing matches "${query}". Try a different name or SKU.`}
+          />
         ) : (
           <EmptyState
             icon={Package}

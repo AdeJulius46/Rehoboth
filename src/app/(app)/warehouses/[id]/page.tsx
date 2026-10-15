@@ -12,6 +12,8 @@ import { formatNaira } from "@/lib/currency";
 import { getAvailableProductsForWarehouse, getWarehouseById } from "@/features/warehouses/queries";
 import { WarehouseDetailActions } from "@/features/warehouses/components/warehouse-detail-actions";
 import { StockSummary } from "@/features/warehouses/components/stock-summary";
+import { getWarehouseStockMovements } from "@/features/stock-movements/queries";
+import { StockHistory } from "@/features/stock-movements/components/stock-history";
 
 function initials(name: string) {
   return name
@@ -30,7 +32,10 @@ export default async function WarehouseDetailPage({ params }: { params: Promise<
     notFound();
   }
 
-  const availableProducts = await getAvailableProductsForWarehouse(id);
+  const [availableProducts, stockMovements] = await Promise.all([
+    getAvailableProductsForWarehouse(id),
+    getWarehouseStockMovements(id),
+  ]);
 
   const stockRows = warehouse.stock.map((s) => ({
     id: s.id,
@@ -154,19 +159,21 @@ export default async function WarehouseDetailPage({ params }: { params: Promise<
           <StockSummary warehouseId={warehouse.id} stock={stockRows} availableProducts={availableProducts} />
         </TabsContent>
 
-        {["transfers", "activity"].map((tab) => (
-          <TabsContent key={tab} value={tab} className="mt-4">
-            <Card className="p-0">
-              <div className="p-5">
-                <EmptyState
-                  icon={Activity}
-                  title={`No ${tab} data yet`}
-                  description="This section will be available once Products are added and stock movements begin."
-                />
-              </div>
-            </Card>
-          </TabsContent>
-        ))}
+        <TabsContent value="transfers" className="mt-4">
+          <Card className="p-0">
+            <div className="p-5">
+              <EmptyState
+                icon={Activity}
+                title="No transfers data yet"
+                description="This section will be available once Products are added and stock movements begin."
+              />
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="activity" className="mt-4">
+          <StockHistory movements={stockMovements} />
+        </TabsContent>
       </Tabs>
     </div>
   );

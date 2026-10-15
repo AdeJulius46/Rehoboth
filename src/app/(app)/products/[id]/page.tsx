@@ -11,13 +11,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { formatNaira } from "@/lib/currency";
 import { getProductById } from "@/features/products/queries";
 import { ProductDetailActions } from "@/features/products/components/product-detail-actions";
+import { getProductStockMovements } from "@/features/stock-movements/queries";
+import { StockHistory } from "@/features/stock-movements/components/stock-history";
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   const isAdmin = session?.user?.role === "ADMIN";
 
   const { id } = await params;
-  const product = await getProductById(id);
+  const [product, stockMovements] = await Promise.all([getProductById(id), getProductStockMovements(id)]);
 
   if (!product) {
     notFound();
@@ -83,6 +85,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="sales">Recent Sales</TabsTrigger>
+          <TabsTrigger value="stock-history">Stock History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 space-y-4">
@@ -138,6 +141,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               <EmptyState icon={Activity} title="No sales yet" description="Sales will appear here once the Sales module is built." />
             </div>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="stock-history" className="mt-4">
+          <StockHistory movements={stockMovements} />
         </TabsContent>
       </Tabs>
     </div>

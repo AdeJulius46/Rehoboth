@@ -104,6 +104,8 @@ export default async function SaleDetailPage({
             <p className="font-medium text-foreground">
               {sale.paymentMethod ? PAYMENT_METHOD_LABELS[sale.paymentMethod] : "—"}
             </p>
+            <p className="text-xs text-muted-foreground">Recorded By</p>
+            <p className="font-medium text-foreground">{sale.createdBy?.name ?? "—"}</p>
           </div>
           <div className="space-y-1 text-sm">
             <p className="flex items-center justify-between">

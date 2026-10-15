@@ -3,9 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { warehouseSchema } from "@/features/warehouses/schema";
 import { generateWarehouseCode } from "@/features/warehouses/queries";
+import { adjustStock } from "@/features/stock-movements/adjust-stock";
 
 export type ActionResult = { success: true } | { success: false; error: string };
 
@@ -74,12 +76,25 @@ export async function setStockQuantity(stockId: string, quantity: number): Promi
     return { success: false, error: "Enter a valid quantity" };
   }
 
+  const session = await auth();
   const stock = await db.stock.findUnique({ where: { id: stockId } });
   if (!stock) {
     return { success: false, error: "Stock record not found" };
   }
 
-  await db.stock.update({ where: { id: stockId }, data: { quantity } });
+  const delta = quantity - stock.quantity;
+  if (delta !== 0) {
+    await db.$transaction(async (tx) => {
+      await adjustStock(tx, {
+        productId: stock.productId,
+        warehouseId: stock.warehouseId,
+        delta,
+        reason: "MANUAL_ADJUSTMENT",
+        createdById: session?.user?.id,
+      });
+    });
+  }
+
   revalidatePath(`/warehouses/${stock.warehouseId}`);
   revalidatePath(`/products/${stock.productId}`);
   return { success: true };
@@ -94,10 +109,15 @@ export async function addProductStock(
     return { success: false, error: "Enter a valid quantity" };
   }
 
-  await db.stock.upsert({
-    where: { productId_warehouseId: { productId, warehouseId } },
-    create: { productId, warehouseId, quantity },
-    update: { quantity: { increment: quantity } },
+  const session = await auth();
+  await db.$transaction(async (tx) => {
+    await adjustStock(tx, {
+      productId,
+      warehouseId,
+      delta: quantity,
+      reason: "RESTOCK",
+      createdById: session?.user?.id,
+    });
   });
 
   revalidatePath(`/warehouses/${warehouseId}`);

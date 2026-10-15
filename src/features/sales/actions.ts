@@ -3,13 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { saleSchema, saleUpdateSchema } from "@/features/sales/schema";
 import { generateSaleNumber } from "@/features/sales/queries";
+import { adjustStock } from "@/features/stock-movements/adjust-stock";
 
 export type ActionResult = { success: true } | { success: false; error: string };
 
 export async function createSale(formData: FormData): Promise<ActionResult> {
+  const session = await auth();
   const number = (formData.get("number") as string) || (await generateSaleNumber());
 
   let items: unknown;
@@ -75,14 +78,19 @@ export async function createSale(formData: FormData): Promise<ActionResult> {
         subtotal,
         tax,
         total,
+        createdById: session?.user?.id ?? null,
         items: { create: lineItems },
       },
     });
 
     for (const item of lineItems) {
-      await tx.stock.update({
-        where: { productId_warehouseId: { productId: item.productId, warehouseId } },
-        data: { quantity: { decrement: item.quantity } },
+      await adjustStock(tx, {
+        productId: item.productId,
+        warehouseId,
+        delta: -item.quantity,
+        reason: "SALE",
+        saleId: created.id,
+        createdById: session?.user?.id,
       });
     }
 
@@ -122,6 +130,7 @@ export async function updateSaleStatus(
   id: string,
   status: "PENDING" | "COMPLETED" | "CANCELLED",
 ): Promise<ActionResult> {
+  const session = await auth();
   const sale = await db.sale.findUnique({ where: { id }, include: { items: true } });
   if (!sale) {
     return { success: false, error: "Sale not found" };
@@ -134,16 +143,24 @@ export async function updateSaleStatus(
     if (sale.warehouseId) {
       if (status === "CANCELLED" && sale.status !== "CANCELLED") {
         for (const item of sale.items) {
-          await tx.stock.update({
-            where: { productId_warehouseId: { productId: item.productId, warehouseId: sale.warehouseId! } },
-            data: { quantity: { increment: item.quantity } },
+          await adjustStock(tx, {
+            productId: item.productId,
+            warehouseId: sale.warehouseId!,
+            delta: item.quantity,
+            reason: "SALE_CANCELLED",
+            saleId: sale.id,
+            createdById: session?.user?.id,
           });
         }
       } else if (sale.status === "CANCELLED" && status !== "CANCELLED") {
         for (const item of sale.items) {
-          await tx.stock.update({
-            where: { productId_warehouseId: { productId: item.productId, warehouseId: sale.warehouseId! } },
-            data: { quantity: { decrement: item.quantity } },
+          await adjustStock(tx, {
+            productId: item.productId,
+            warehouseId: sale.warehouseId!,
+            delta: -item.quantity,
+            reason: "SALE_REINSTATED",
+            saleId: sale.id,
+            createdById: session?.user?.id,
           });
         }
       }
@@ -157,6 +174,7 @@ export async function updateSaleStatus(
 }
 
 export async function deleteSale(id: string): Promise<ActionResult> {
+  const session = await auth();
   const sale = await db.sale.findUnique({ where: { id }, include: { items: true } });
   if (!sale) {
     return { success: false, error: "Sale not found" };
@@ -165,9 +183,13 @@ export async function deleteSale(id: string): Promise<ActionResult> {
   await db.$transaction(async (tx) => {
     if (sale.status !== "CANCELLED" && sale.warehouseId) {
       for (const item of sale.items) {
-        await tx.stock.update({
-          where: { productId_warehouseId: { productId: item.productId, warehouseId: sale.warehouseId! } },
-          data: { quantity: { increment: item.quantity } },
+        await adjustStock(tx, {
+          productId: item.productId,
+          warehouseId: sale.warehouseId!,
+          delta: item.quantity,
+          reason: "SALE_DELETED",
+          saleId: sale.id,
+          createdById: session?.user?.id,
         });
       }
     }

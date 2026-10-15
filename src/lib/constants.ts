@@ -107,3 +107,12 @@ export const EXPENSE_STATUS_VARIANT: Record<string, StatusVariant> = {
   APPROVED: "success",
   REJECTED: "danger",
 };
+
+export const STOCK_MOVEMENT_REASON_VARIANT: Record<string, StatusVariant> = {
+  SALE: "danger",
+  SALE_CANCELLED: "success",
+  SALE_REINSTATED: "danger",
+  SALE_DELETED: "success",
+  RESTOCK: "success",
+  MANUAL_ADJUSTMENT: "neutral",
+};

@@ -94,6 +94,7 @@ export async function getSaleById(id: string) {
       customer: true,
       agent: true,
       warehouse: true,
+      createdBy: { select: { id: true, name: true } },
       items: { include: { product: true } },
       invoice: { select: { id: true, number: true, status: true } },
     },
