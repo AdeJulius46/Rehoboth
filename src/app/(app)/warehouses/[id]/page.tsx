@@ -71,15 +71,15 @@ export default async function WarehouseDetailPage({ params }: { params: Promise<
               />
             </div>
           </div>
-          <div className="flex items-start gap-6">
-            <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
+          <div className="flex flex-wrap items-start gap-6">
+            <div className="grid grid-cols-1 gap-x-8 gap-y-1 text-sm sm:grid-cols-2">
               <div>
                 <p className="text-xs text-muted-foreground">Items in Stock</p>
                 <p className="font-medium text-foreground">{totalItems}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Stock Value</p>
-                <p className="font-medium text-foreground">{formatNaira(totalValue)}</p>
+                <p className="font-medium text-foreground break-words">{formatNaira(totalValue)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Date Created</p>
@@ -102,8 +102,8 @@ export default async function WarehouseDetailPage({ params }: { params: Promise<
             </span>
           ) : null}
           {warehouse.email ? (
-            <span className="flex items-center gap-1.5">
-              <Mail className="size-4" />
+            <span className="flex items-center gap-1.5 break-all">
+              <Mail className="size-4 shrink-0" />
               {warehouse.email}
             </span>
           ) : null}
@@ -141,7 +141,7 @@ export default async function WarehouseDetailPage({ params }: { params: Promise<
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Total Value</p>
-                <p className="text-lg font-semibold text-foreground">{formatNaira(totalValue)}</p>
+                <p className="break-words text-lg font-semibold text-foreground">{formatNaira(totalValue)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Low Stock Items</p>

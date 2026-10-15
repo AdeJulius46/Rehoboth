@@ -63,8 +63,8 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
             <Phone className="size-4" />
             {agent.phone}
           </span>
-          <span className="flex items-center gap-1.5">
-            <Mail className="size-4" />
+          <span className="flex items-center gap-1.5 break-all">
+            <Mail className="size-4 shrink-0" />
             {agent.email}
           </span>
           <span className="flex items-center gap-1.5">

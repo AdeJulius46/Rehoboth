@@ -88,7 +88,7 @@ export default async function DashboardPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-2xl font-semibold text-foreground">Welcome Back</h2>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <ReportPeriodFilter period={range.key} from={toDateKey(range.start)} to={toDateKey(lastDay)} />
           <Button render={<Link href="/sales/new" />} nativeButton={false}>
             <ShoppingCart />

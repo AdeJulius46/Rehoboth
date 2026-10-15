@@ -95,12 +95,16 @@ export function Combobox({
             ref={triggerRef}
             type="button"
             variant="outline"
-            className={cn("w-full justify-between font-normal", !selected && "text-muted-foreground", className)}
+            className={cn(
+              "w-full min-w-0 justify-between font-normal",
+              !selected && "text-muted-foreground",
+              className,
+            )}
           />
         }
       >
-        <span className="truncate">{selected ? selected.label : placeholder}</span>
-        <ChevronsUpDown className="size-4 opacity-50" />
+        <span className="min-w-0 truncate">{selected ? selected.label : placeholder}</span>
+        <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
       </PopoverTrigger>
       <PopoverContent align="start" side={placement.side} className="w-(--anchor-width) p-0">
         <div className="p-2">

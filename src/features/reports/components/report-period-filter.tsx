@@ -33,12 +33,13 @@ export function ReportPeriodFilter({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="flex items-center gap-1 rounded-lg border border-border p-1">
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <div className="flex min-w-0 items-center gap-1 overflow-x-auto rounded-lg border border-border p-1">
         {PERIODS.map((item) => (
           <Button
             key={item.key}
             size="sm"
+            className="shrink-0"
             variant={period === item.key ? "default" : "ghost"}
             onClick={() => selectPeriod(item.key)}
           >

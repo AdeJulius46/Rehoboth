@@ -83,8 +83,8 @@ export function SaleDetailDialog({
                 {sale.customerPhone}
               </p>
               {sale.customerEmail ? (
-                <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Mail className="size-3.5" />
+                <p className="flex items-center gap-1.5 break-all text-sm text-muted-foreground">
+                  <Mail className="size-3.5 shrink-0" />
                   {sale.customerEmail}
                 </p>
               ) : null}

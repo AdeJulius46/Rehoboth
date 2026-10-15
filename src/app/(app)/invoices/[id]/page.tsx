@@ -75,8 +75,8 @@ export default async function InvoiceDetailPage({
               {invoice.customer.phone}
             </p>
             {invoice.customer.email ? (
-              <p className="flex items-center gap-1.5 text-muted-foreground">
-                <Mail className="size-3.5" />
+              <p className="flex items-center gap-1.5 break-all text-muted-foreground">
+                <Mail className="size-3.5 shrink-0" />
                 {invoice.customer.email}
               </p>
             ) : null}

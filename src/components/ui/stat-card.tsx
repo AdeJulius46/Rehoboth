@@ -30,9 +30,9 @@ export function StatCard({
         >
           <Icon className="size-4.5" />
         </div>
-        <span className="text-sm text-muted-foreground">{label}</span>
+        <span className="min-w-0 break-words text-sm text-muted-foreground">{label}</span>
       </div>
-      <div className="text-2xl font-semibold text-foreground">{value}</div>
+      <div className="text-2xl font-semibold break-words text-foreground">{value}</div>
       {delta ? (
         <div className="flex items-center gap-1 text-xs">
           <span

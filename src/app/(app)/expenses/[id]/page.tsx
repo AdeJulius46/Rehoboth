@@ -74,7 +74,7 @@ export default async function ExpenseDetailPage({
 
         <div className="flex items-center justify-between border-t border-border pt-4 text-sm">
           <span className="font-medium text-foreground">Amount</span>
-          <span className="text-lg font-semibold text-foreground">{formatNaira(expense.amount)}</span>
+          <span className="break-words text-lg font-semibold text-foreground">{formatNaira(expense.amount)}</span>
         </div>
       </Card>
     </div>

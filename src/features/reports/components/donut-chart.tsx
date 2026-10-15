@@ -18,7 +18,7 @@ export function DonutChart({
   const hasData = data.some((d) => d.value > 0);
 
   return (
-    <div className="flex items-center gap-6">
+    <div className="flex flex-col items-center gap-6 xl:flex-row">
       <div className="relative size-48 shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -37,14 +37,14 @@ export function DonutChart({
             </Pie>
           </PieChart>
         </ResponsiveContainer>
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
           <p className="text-xs text-muted-foreground">{centerLabel}</p>
-          <p className="text-lg font-semibold text-foreground">{formatNaira(centerValue)}</p>
+          <p className="break-words text-base font-semibold text-foreground">{formatNaira(centerValue)}</p>
         </div>
       </div>
-      <div className="space-y-2 text-sm">
+      <div className="w-full min-w-0 space-y-2 text-sm">
         {data.map((entry, index) => (
-          <div key={entry.label} className="flex items-center gap-2">
+          <div key={entry.label} className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
             <span
               className="size-2.5 shrink-0 rounded-full"
               style={{ backgroundColor: COLORS[index % COLORS.length] }}

@@ -81,8 +81,8 @@ export default async function CustomerDetailPage({
             {customer.phone}
           </span>
           {customer.email ? (
-            <span className="flex items-center gap-1.5">
-              <Mail className="size-4" />
+            <span className="flex items-center gap-1.5 break-all">
+              <Mail className="size-4 shrink-0" />
               {customer.email}
             </span>
           ) : null}
@@ -127,7 +127,7 @@ export default async function CustomerDetailPage({
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Email Address</p>
-                  <p className="text-foreground">{customer.email || "Not provided"}</p>
+                  <p className="break-all text-foreground">{customer.email || "Not provided"}</p>
                 </div>
                 {customer.companyName ? (
                   <div>
