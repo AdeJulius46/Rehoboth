@@ -17,11 +17,8 @@ export type ListExpensesParams = {
   pageSize?: number;
 };
 
-export async function listExpenses(params: ListExpensesParams) {
-  const page = Math.max(params.page ?? 1, 1);
-  const pageSize = Math.min(Math.max(params.pageSize ?? 25, 1), 100);
-
-  const where = {
+function buildExpenseWhere(params: Pick<ListExpensesParams, "q" | "status" | "category">) {
+  return {
     ...(params.q
       ? {
           OR: [
@@ -36,10 +33,20 @@ export async function listExpenses(params: ListExpensesParams) {
       : {}),
     ...(params.category && params.category !== "all" ? { category: params.category } : {}),
   };
+}
 
-  const orderBy = isSortableField(params.sortBy)
+function buildExpenseOrderBy(params: Pick<ListExpensesParams, "sortBy" | "sortDir">) {
+  return isSortableField(params.sortBy)
     ? { [params.sortBy]: params.sortDir === "desc" ? ("desc" as const) : ("asc" as const) }
     : { createdAt: "desc" as const };
+}
+
+export async function listExpenses(params: ListExpensesParams) {
+  const page = Math.max(params.page ?? 1, 1);
+  const pageSize = Math.min(Math.max(params.pageSize ?? 25, 1), 100);
+
+  const where = buildExpenseWhere(params);
+  const orderBy = buildExpenseOrderBy(params);
 
   const [expenses, totalItems] = await Promise.all([
     db.expense.findMany({
@@ -59,6 +66,28 @@ export async function listExpenses(params: ListExpensesParams) {
 
   return { rows, totalItems, page, pageSize };
 }
+
+/** Every expense matching the current filters, unpaginated — for CSV export. */
+export async function getExpensesForExport(params: Pick<ListExpensesParams, "q" | "status" | "category" | "sortBy" | "sortDir">) {
+  const where = buildExpenseWhere(params);
+  const orderBy = buildExpenseOrderBy(params);
+
+  const expenses = await db.expense.findMany({ where, orderBy, include: { paidBy: true } });
+
+  return expenses.map((expense) => ({
+    number: expense.number,
+    date: expense.date,
+    category: expense.category,
+    description: expense.description,
+    vendor: expense.vendor,
+    amount: Number(expense.amount),
+    paymentMethod: expense.paymentMethod,
+    status: expense.status,
+    paidByName: expense.paidBy?.name ?? null,
+  }));
+}
+
+export type ExpenseExportRow = Awaited<ReturnType<typeof getExpensesForExport>>[number];
 
 export type ExpenseListRow = Awaited<ReturnType<typeof listExpenses>>["rows"][number];
 

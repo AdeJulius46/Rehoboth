@@ -10,7 +10,8 @@ import { DataTablePagination } from "@/components/data-table/pagination";
 import { expenseColumns } from "@/features/expenses/components/columns";
 import { ExpenseStats } from "@/features/expenses/components/expense-stats";
 import { ExpenseFilters } from "@/features/expenses/components/expense-filters";
-import { getExpenseStats, listExpenses } from "@/features/expenses/queries";
+import { ExpenseExportButton } from "@/features/expenses/components/expense-export";
+import { getExpenseStats, getExpensesForExport, listExpenses } from "@/features/expenses/queries";
 
 export default async function ExpensesPage({
   searchParams,
@@ -26,19 +27,23 @@ export default async function ExpensesPage({
   const page = typeof params.page === "string" ? Number(params.page) : 1;
   const pageSize = typeof params.pageSize === "string" ? Number(params.pageSize) : 25;
 
-  const [stats, { rows, totalItems }] = await Promise.all([
+  const [stats, { rows, totalItems }, exportRows] = await Promise.all([
     getExpenseStats(),
     listExpenses({ q, status, category, sortBy, sortDir, page, pageSize }),
+    getExpensesForExport({ q, status, category, sortBy, sortDir }),
   ]);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-2xl font-semibold text-foreground">Expenses Overview</h2>
-        <Button render={<Link href="/expenses/new" />} nativeButton={false}>
-          <Plus />
-          Add Expense
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <ExpenseExportButton rows={exportRows} />
+          <Button render={<Link href="/expenses/new" />} nativeButton={false}>
+            <Plus />
+            Add Expense
+          </Button>
+        </div>
       </div>
 
       <ExpenseStats stats={stats} />
